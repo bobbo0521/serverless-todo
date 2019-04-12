@@ -1,0 +1,59 @@
+service: todo
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action: 
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamoDb:Scan
+        - dynamoDb:GetItem
+        - dynamoDb:PutItem
+        - dynamoDb:UpdateItem
+        - dynamoDb:DeleteItem
+      Resource: 
+        - {Fn::GetAtt: ["TodoTable","Arn"]}
+
+functions:
+  create:
+    handler: src/create/index.handler
+    events:
+      - http:
+          path: /todo
+          method: post
+  list:
+    handler: src/list/index.handler
+    events:
+      - http:
+          path: /todo
+          method: get
+  get:
+    handler: src/get/index.handler
+    events: 
+      - http:
+          path: /todo/{id}
+          method: get
+  delete:
+    handler: src/delete/index.handler
+    events: 
+      - http:
+          path: /todo/{id}
+          method: delete
+
+resources:
+  Resources:
+    TodoTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: todos
+        AttributeDefinitions:
+          - AttributeName: Id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: Id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
